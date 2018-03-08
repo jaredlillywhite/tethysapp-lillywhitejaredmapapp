@@ -1,0 +1,23 @@
+{% extends "lillywhitejaredmapapp/base.html" %}
+{% load tethys_gizmos %}
+
+{% load staticfiles %}
+
+{% block header_buttons %}
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Help">
+    <a data-toggle="modal" data-target="#help-modal"><span class="glyphicon glyphicon-question-sign"></span></a>
+  </div>
+{% endblock %}
+
+{% block app_content %}
+    <p><embed src="{% static 'lillywhitejaredmapapp/proposal.pdf' %}" type="application/pdf" width="100%" height="600px" /></p>
+{% endblock %}
+
+{# Use the after_app_content block for modals #}
+{% block after_app_content %}
+
+{% endblock %}
+
+{% block app_actions %}
+
+{% endblock %}

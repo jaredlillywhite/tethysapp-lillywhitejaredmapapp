@@ -1,0 +1,169 @@
+{% extends "lillywhitejaredmapapp/base.html" %}
+{% load tethys_gizmos %}
+
+{% block header_buttons %}
+  <div class="header-button glyphicon-button" data-toggle="tooltip" data-placement="bottom" title="Help">
+    <a data-toggle="modal" data-target="#help-modal"><span class="glyphicon glyphicon-question-sign"></span></a>
+  </div>
+{% endblock %}
+
+{% block app_navigation_items %}
+  {% url 'lillywhitejaredmapapp:home' as home %}
+  {% url 'lillywhitejaredmapapp:mapview' as mapview %}
+  {% url 'lillywhitejaredmapapp:dataservices' as dataservices %}
+  {% url 'lillywhitejaredmapapp:about' as about %}
+  {% url 'lillywhitejaredmapapp:proposal' as proposal %}
+  {% url 'lillywhitejaredmapapp:mockup' as mockup %}
+
+  <li class="title">App Navigation</li>
+  <li class="{% if request.path == home %}active{% endif %}"><a href="{{ home }}">Home</a></li>
+  <li class="{% if request.path == mapview %}active{% endif %}"><a href="{{ mapview }}">Map View</a></li>
+  <li class="{% if request.path == dataservices %}active{% endif %}"><a href="{{ dataservices }}">Data Services</a></li>
+  <li class="{% if request.path == about %}active{% endif %}"><a href="{{ about }}">About</a></li>
+  <li class="{% if request.path == proposal %}active{% endif %}"><a href="{{ proposal }}">Project Proposal</a></li>
+  <li class="{% if request.path == mockup %}active{% endif %}"><a href="{{ mockup }}">Mockup Diagram</a></li>
+  <li class="separator"></li>
+    {% gizmo vertical_buttons %}
+    <p></p>
+    {% gizmo grade_slider %}
+    <p></p>
+    <br>
+    {% gizmo find_route_button %}
+
+{% endblock %}
+
+{% block app_content %}
+
+<head>
+  <link href="./style.css" type="text/css" rel="stylesheet">
+  <link rel="stylesheet" href="http://js.arcgis.com/4.6/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.6/"></script>
+  <script>
+	require([
+		"esri/Map",
+		"esri/views/MapView",
+		"esri/layers/FeatureLayer",
+		"esri/layers/MapImageLayer",
+		"dojo/dom",
+		"dojo/on",
+		"dojo/domReady!"
+	], function(
+		Map,
+		MapView,
+		FeatureLayer,
+		MapImageLayer,
+		dom,
+		on,
+		query
+	) {
+
+		map = new Map({
+			basemap: "streets",
+		});
+
+
+		var view = new MapView({
+			container: "viewDiv",
+			map: map,
+			center: [-111.1, 39.1],
+			zoom: 6
+		});
+
+		var template = { // autocasts as new PopupTemplate()
+			title: "Station Information",
+			content: "<p>Station Info:</p>" + "<ul><li>Address: {ADDRESS}</li>" + "<li> Name: {NAME}</li>" + "<li>Park & Ride: {PARKNRIDE}</li></ul>",
+			fieldInfos: [{
+				fieldName: "ADDRESS",
+			}, {
+				fieldName: "NAME",
+			}, {
+				fieldName: "PARKNRIDE",
+			}]
+		};
+		var commuter_rail_layer = new FeatureLayer ({
+			url: "http://geoserver2.byu.edu/arcgis/rest/services/StorminMormons/CommuterRailStations/FeatureServer",
+			outFields: ["*"],
+			popupTemplate: template,
+			id: "commuter_rail_layer"
+		});
+		var dem_layer = new MapImageLayer({
+			url: "http://geoserver2.byu.edu/arcgis/rest/services/StorminMormons/DEM/MapServer",
+			id: "dem"
+		});
+
+		map.add(dem_layer);
+		map.add(commuter_rail_layer);
+
+		//Set DEM opacity
+		dem_layer.opacity = 0.3;
+
+
+	// Create a variable referencing the checkbox node
+
+    // Listen to the onchange event for the checkbox
+    on(dom.byId("dem"), "change", function(){
+		dem_layer.visible = dom.byId("dem").checked;
+	});
+	on(dom.byId("frontrunner"), "change", function(){
+		commuter_rail_layer.visible = dom.byId("frontrunner").checked;
+	});
+
+  });
+  </script>
+  <title>Bike Trail Route Planning Tool</title>
+</head>
+
+<body>
+
+<p>
+<div style="height:500px; width=500px;" id="viewDiv"></div>
+
+		<table align="center">
+			<tr>
+				<th class="title background">Visible Layers:</th>
+			</tr>
+			<tr>
+				<td>
+					<input type="checkbox" id="frontrunner" checked> Frontrunner Stations
+					</td></tr>
+			<tr>
+				<td>
+					<input type="checkbox" id="dem" checked>Utah DEM
+					</td></tr>
+
+		</table>
+</p>
+
+
+
+</body>
+
+{% endblock %}
+
+{# Use the after_app_content block for modals #}
+{% block after_app_content %}
+  <!-- Example Modal -->
+  <div class="modal fade" id="help-modal" tabindex="-1" role="dialog" aria-labelledby="help-modal-label">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h5 class="modal-title" id="help-modal-label">Example Modal</h5>
+        </div>
+        <div class="modal-body">
+          <p>You can add custom buttons to the app header using the <code>header_buttons</code> block. Use anchor/link tags for the button and wrap it in a div with the class <code>header-button</code>. For buttons with the gliphyicons, add the <code>glyphicon-button</code> class as well.</p>
+          <p>Ever have trouble using a modal in a Tethys app? Use the <code>after_app_content</code> block for modal content to allow them to function properly. See: <a href="https://getbootstrap.com/javascript/#modals">Bootstrap Modals</a></p>
+          <p>Add tooltips to any element by adding the <code>data-toggle</code>, <code>data-placement</code>, and <code>title</code> attributes to the button. See: <a href="https://getbootstrap.com/javascript/#tooltips">Bootstrap Tooltips</a></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block app_actions %}
+
+{% endblock %}
